@@ -1,32 +1,9 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import AuthedView from '@/components/AuthedView';
 import LoginForm from '@/components/LoginForm';
-import SurveyForm from '@/components/SurveyForm';
+import { getSessionEmail } from '@/lib/session';
 
-const STORAGE_KEY = 'ws-survey-email';
-
-export default function Home() {
-  const [email, setEmail] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) setEmail(saved);
-    setReady(true);
-  }, []);
-
-  const handleLogin = (loggedEmail: string) => {
-    localStorage.setItem(STORAGE_KEY, loggedEmail);
-    setEmail(loggedEmail);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setEmail(null);
-  };
-
-  if (!ready) return null;
+export default async function Home() {
+  const email = await getSessionEmail();
 
   return (
     <div className="min-h-screen bg-white">
@@ -55,30 +32,7 @@ export default function Home() {
 
       {/* Main content */}
       <main className="mx-auto max-w-2xl px-6 py-10 md:py-16">
-        {email ? (
-          <>
-            <div className="mb-6 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 text-xs font-bold text-white">
-                  {email.charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-slate-500">Přihlášen/a jako</p>
-                  <p className="truncate text-sm font-medium text-slate-900">{email}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="ml-3 shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              >
-                Odhlásit
-              </button>
-            </div>
-            <SurveyForm email={email} />
-          </>
-        ) : (
-          <LoginForm onLogin={handleLogin} />
-        )}
+        {email ? <AuthedView email={email} /> : <LoginForm />}
       </main>
 
       <footer className="border-t border-slate-100 py-8">

@@ -1,11 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
-
-type Props = {
-  email: string;
-};
+import { useEffect, useState, useTransition } from 'react';
+import { getMyResponse, saveResponse } from '@/app/actions/responses';
 
 const AI_OPTIONS = [
   { value: 'zkusil', label: 'Něco jsem zkusil/a', hint: 'Občas si něco vyzkouším' },
@@ -22,10 +18,9 @@ const OS_OPTIONS = [
 const inputClass =
   'w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:opacity-50';
 
-export default function SurveyForm({ email }: Props) {
-  const supabase = createClient();
+export default function SurveyForm() {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saving, startSaving] = useTransition();
   const [message, setMessage] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
   const [existed, setExisted] = useState(false);
   const [q1, setQ1] = useState('');
@@ -36,20 +31,18 @@ export default function SurveyForm({ email }: Props) {
   const [q5Detail, setQ5Detail] = useState('');
 
   useEffect(() => {
-    const load = async () => {
-      const { data, error } = await supabase
-        .from('responses')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
-      if (error) {
-        setMessage({ type: 'error', text: 'Chyba při načítání: ' + error.message });
-      } else if (data) {
-        setQ1(data.q1_expectation ?? '');
-        setQ2(data.q2_ai_experience ?? '');
-        setQ3(data.q3_app_idea ?? '');
-        setQ4(data.q4_os ?? '');
-        const help = data.q5_help_needed ?? '';
+    let cancelled = false;
+    getMyResponse().then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setMessage({ type: 'error', text: 'Chyba při načítání: ' + result.error });
+      } else if (result.response) {
+        const r = result.response;
+        setQ1(r.q1_expectation ?? '');
+        setQ2(r.q2_ai_experience ?? '');
+        setQ3(r.q3_app_idea ?? '');
+        setQ4(r.q4_os ?? '');
+        const help = r.q5_help_needed ?? '';
         if (help.trim() !== '') {
           setQ5NeedsHelp(true);
           setQ5Detail(help);
@@ -57,38 +50,39 @@ export default function SurveyForm({ email }: Props) {
         setExisted(true);
       }
       setLoading(false);
-    };
-    load();
-  }, [email, supabase]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
-    const payload = {
-      email,
-      q1_expectation: q1.trim() || null,
-      q2_ai_experience: q2 || null,
-      q3_app_idea: q3.trim() || null,
-      q4_os: q4 || null,
-      q5_help_needed: q5NeedsHelp ? q5Detail.trim() || null : null,
-    };
-    const { error } = await supabase
-      .from('responses')
-      .upsert(payload, { onConflict: 'email' });
-    setSaving(false);
-    if (error) {
-      setMessage({ type: 'error', text: 'Chyba při ukládání: ' + error.message });
-      return;
-    }
-    setMessage({
-      type: 'ok',
-      text: existed ? 'Odpovědi aktualizovány. Díky!' : 'Díky za vyplnění! Odpovědi uloženy.',
     });
-    setExisted(true);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    startSaving(async () => {
+      const payload = {
+        q1_expectation: q1.trim() || null,
+        q2_ai_experience: q2 || null,
+        q3_app_idea: q3.trim() || null,
+        q4_os: q4 || null,
+        q5_help_needed: q5NeedsHelp ? q5Detail.trim() || null : null,
+      };
+      const result = await saveResponse(payload);
+      if (!result.ok) {
+        setMessage({ type: 'error', text: 'Chyba při ukládání: ' + result.error });
+        return;
+      }
+      setMessage({
+        type: 'ok',
+        text: result.existed
+          ? 'Odpovědi aktualizovány. Díky!'
+          : 'Díky za vyplnění! Odpovědi uloženy.',
+      });
+      setExisted(true);
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
   };
 
   if (loading) {
