@@ -1,42 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { loginWithEmail } from '@/app/actions/auth';
 
-type Props = {
-  onLogin: (email: string) => void;
-};
-
-export default function LoginForm({ onLogin }: Props) {
-  const supabase = createClient();
+export default function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
-  const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalized = email.trim().toLowerCase();
-    if (!normalized) {
-      setError('Zadej svůj email.');
-      return;
-    }
-    setChecking(true);
     setError(null);
-    const { data, error: queryError } = await supabase
-      .from('allowed_emails')
-      .select('email')
-      .eq('email', normalized)
-      .maybeSingle();
-    setChecking(false);
-    if (queryError) {
-      setError('Chyba při ověření: ' + queryError.message);
-      return;
-    }
-    if (!data) {
-      setError('Tenhle email nemáme na seznamu účastníků. Napiš organizátorovi.');
-      return;
-    }
-    onLogin(normalized);
+    startTransition(async () => {
+      const result = await loginWithEmail(email);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    });
   };
 
   return (
@@ -60,7 +44,7 @@ export default function LoginForm({ onLogin }: Props) {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             required
-            disabled={checking}
+            disabled={pending}
             placeholder="jmeno@firma.cz"
             className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:opacity-50"
           />
@@ -86,10 +70,10 @@ export default function LoginForm({ onLogin }: Props) {
 
         <button
           type="submit"
-          disabled={checking}
+          disabled={pending}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-3 font-semibold text-white shadow-sm transition hover:from-teal-600 hover:to-cyan-600 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-60"
         >
-          {checking ? (
+          {pending ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               Ověřuji…
