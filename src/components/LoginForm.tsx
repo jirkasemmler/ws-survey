@@ -28,7 +28,7 @@ export default function LoginForm() {
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-900 md:text-2xl">Přihlaš se emailem</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Pustíme tě dál jen pokud jsi na seznamu účastníků.
+          Použij email, kterým ses registroval na workshop.
         </p>
       </div>
 
