@@ -14,7 +14,7 @@ export default async function Home() {
           <div className="flex items-center gap-2">
             <span className="inline-flex h-2 w-2 rounded-full bg-teal-500" />
             <span className="text-xs font-semibold uppercase tracking-widest text-teal-700">
-              Hack Your Way 2026
+              Hack Your Way 2026 — Product Vibe Coding masterclass
             </span>
           </div>
           <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900 md:text-6xl">
