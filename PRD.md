@@ -52,6 +52,7 @@ organizátor přímo v Supabase).
 3. **Máš nápad na appku, co si chceš odnést? Popiš max dvěma větami.** *(freetext)*
 4. **Jaký máš OS?** *(výběr)* — Windows / Mac / Linux
 5. **Budeš chtít pomoct s instalací nějakého toolu?** *(podmíněný freetext)* — ne / ano + popis
+6. **Preferuješ Claude CLI nebo Claude Desktop?** *(výběr)* — CLI / Desktop
 
 ## Datový model
 
@@ -79,6 +80,7 @@ Odpovědi účastníků. Na email je unikátní constraint → 1 účastník = 1
 | `q3_app_idea` | `text` | Q3 — nápad na appku (freetext, max 2 věty) |
 | `q4_os` | `text` | Q4 — `'windows'` / `'mac'` / `'linux'` |
 | `q5_help_needed` | `text` | Q5 — prázdné/NULL = ne, jinak popis instalace |
+| `q6_claude_pref` | `text` | Q6 — `'cli'` / `'desktop'` |
 | `created_at` | `timestamptz` (default now()) | První odeslání |
 | `updated_at` | `timestamptz` (default now()) | Poslední úprava |
 
@@ -103,6 +105,7 @@ create table responses (
   q3_app_idea text,
   q4_os text,
   q5_help_needed text,
+  q6_claude_pref text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
