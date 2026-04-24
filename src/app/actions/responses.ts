@@ -9,6 +9,7 @@ export type ResponseData = {
   q3_app_idea: string | null;
   q4_os: string | null;
   q5_help_needed: string | null;
+  q6_claude_pref: string | null;
 };
 
 export type LoadResult =
@@ -26,7 +27,7 @@ export async function getMyResponse(): Promise<LoadResult> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('responses')
-    .select('q1_expectation, q2_ai_experience, q3_app_idea, q4_os, q5_help_needed')
+    .select('q1_expectation, q2_ai_experience, q3_app_idea, q4_os, q5_help_needed, q6_claude_pref')
     .eq('email', email)
     .maybeSingle();
 

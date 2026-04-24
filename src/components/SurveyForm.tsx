@@ -15,6 +15,11 @@ const OS_OPTIONS = [
   { value: 'linux', label: 'Linux' },
 ];
 
+const CLAUDE_PREF_OPTIONS = [
+  { value: 'cli', label: 'Claude CLI', hint: 'Claude Code v terminálu' },
+  { value: 'desktop', label: 'Claude Desktop', hint: 'Desktop aplikace' },
+];
+
 const inputClass =
   'w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:opacity-50';
 
@@ -29,6 +34,7 @@ export default function SurveyForm() {
   const [q4, setQ4] = useState('');
   const [q5NeedsHelp, setQ5NeedsHelp] = useState(false);
   const [q5Detail, setQ5Detail] = useState('');
+  const [q6, setQ6] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +53,7 @@ export default function SurveyForm() {
           setQ5NeedsHelp(true);
           setQ5Detail(help);
         }
+        setQ6(r.q6_claude_pref ?? '');
         setExisted(true);
       }
       setLoading(false);
@@ -66,6 +73,7 @@ export default function SurveyForm() {
         q3_app_idea: q3.trim() || null,
         q4_os: q4 || null,
         q5_help_needed: q5NeedsHelp ? q5Detail.trim() || null : null,
+        q6_claude_pref: q6 || null,
       };
       const result = await saveResponse(payload);
       if (!result.ok) {
@@ -247,6 +255,27 @@ export default function SurveyForm() {
             className={`mt-3 ${inputClass}`}
           />
         )}
+      </Card>
+
+      <Card
+        index={6}
+        title="Preferuješ Claude CLI nebo Claude Desktop?"
+        subtitle="Se kterou variantou chceš pracovat na workshopu"
+        type="volba"
+      >
+        <div className="space-y-2">
+          {CLAUDE_PREF_OPTIONS.map((opt) => (
+            <OptionRow
+              key={opt.value}
+              name="q6"
+              value={opt.value}
+              label={opt.label}
+              hint={opt.hint}
+              checked={q6 === opt.value}
+              onChange={setQ6}
+            />
+          ))}
+        </div>
       </Card>
 
       <div className="sticky bottom-4 z-10 pt-2">
