@@ -68,7 +68,9 @@ export default function CommandBlock({ commands }: Props) {
             className="group flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-800/60"
           >
             <span className="select-none text-teal-400">$</span>
-            <code className="flex-1 break-all text-slate-100">{cmd}</code>
+            <code className="flex-1 overflow-x-auto whitespace-nowrap text-slate-100">
+              {cmd}
+            </code>
             <button
               onClick={() => copy(cmd, idx)}
               aria-label="Zkopírovat příkaz"

@@ -45,7 +45,7 @@ export default function StartPage() {
       </header>
 
       {/* Main */}
-      <main className="mx-auto max-w-2xl px-6 py-10 md:py-16">
+      <main className="mx-auto max-w-4xl px-6 py-10 md:py-16">
         {/* Step 1 */}
         <div className="mb-6">
           <div className="mb-3 flex items-center gap-3">
