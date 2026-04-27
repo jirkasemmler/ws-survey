@@ -82,6 +82,9 @@ jobs:
       - name: Test
         run: npm test
         if: hashFiles('vitest.config.ts') != ''
+        # Testy běží proti mockům — nepotřebují Supabase secrets.
+        # /hack-test nastavuje vi.mock pro Supabase client, takže žádný
+        # síťový přístup k Supabase se neděje.
 
       - name: Build
         run: npm run build
@@ -90,9 +93,15 @@ jobs:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 ```
 
+**Důležité:** Testy (`npm test`) **nikdy neběží proti reálné Supabase** — používají
+mocky (viz `/hack-test`). Supabase client se v testech mockuje přes `vi.mock`,
+takže krok Test nepotřebuje žádné env proměnné ani secrets. Secrets jsou potřeba
+**jen pro build** (`next build` kompiluje kód, který referuje `NEXT_PUBLIC_*`
+proměnné).
+
 ### 4. Nastavení secrets na GitHubu
 
-Řekni uživateli, že build potřebuje stejné env proměnné, co má na Vercelu.
+Řekni uživateli, že **build** (ne testy!) potřebuje stejné env proměnné, co má na Vercelu.
 Navigace: `github.com/<user>/<repo>/settings/secrets/actions` → New repository secret.
 Přidat dvě:
 - `NEXT_PUBLIC_SUPABASE_URL`
@@ -125,6 +134,9 @@ stejně tak a bez zelené se nemerguje."
   types. V takovém případě buď (a) rychle opravit, nebo (b) dát `tsc --noEmit` s
   mírnějším configem. Řekni uživateli volbu.
 - Pokud `vitest.config.ts` neexistuje, krok `Test` sám přeskočí díky `if`.
+- **Testy vždy proti mockům, nikdy proti reálné Supabase.** Supabase client se
+  v testech mockuje přes `vi.mock` — žádné secrets ani síťový přístup není
+  potřeba. Secrets v CI slouží **výhradně pro build step**.
 - **Nepoužívej** `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` v CI — tam patří jen
   anon key.
 - Mluvíš česky.
